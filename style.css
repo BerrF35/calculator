@@ -1,73 +1,98 @@
 body {
-  background: #f3f3f3;
+  background: #f5f6fa;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   min-height: 100vh;
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 .calculator {
-  background: #222;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  padding: 30px 20px;
-  width: 420px;
-  max-width: 96vw;
+  background: #232426;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.30);
+  margin-top: 32px;
+  padding: 28px 26px 26px 26px;
+  width: 500px;
+  max-width: 98vw;
 }
 
 .display {
   width: 100%;
-  height: 50px;
-  margin-bottom: 12px;
-  font-size: 1.7rem;
-  border-radius: 8px;
+  height: 65px;
+  margin-bottom: 22px;
+  font-size: 2.2rem;
+  border-radius: 10px;
   border: none;
-  padding: 10px 17px;
+  padding: 13px 18px;
   text-align: right;
-  background: #333;
+  background: #18191a;
   color: #fff;
+  box-sizing: border-box;
 }
 
-.row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.row button {
-  flex: 1 1 20%;
-  font-size: 1rem;
+.memrow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .buttons {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
 }
 
 button {
-  padding: 13px 0;
+  min-width: 0;  /* prevents overflow */
+  min-height: 54px;
   font-size: 1.1rem;
   border: none;
-  border-radius: 8px;
-  background: #444;
-  color: #fff;
+  border-radius: 9px;
+  background: #36383c;
+  color: #f0f0f0;
   cursor: pointer;
   transition: background 0.17s;
+  outline: none;
+  font-weight: 500;
 }
 
 button:active {
-  background: #555;
+  background: #44464a;
 }
 
 button.equal {
   background: #ff9500;
   color: #fff;
-  grid-column: span 5;
+  font-size: 1.2rem;
 }
 
 button.equal:hover {
   background: #e58a00;
+}
+
+button:hover:not(.equal) {
+  background: #505155;
+}
+
+@media (max-width: 600px) {
+  .calculator {
+    width: 99vw;
+    padding: 10px 2px 18px 2px;
+  }
+  .display {
+    font-size: 1.35rem;
+    height: 38px;
+    padding: 6px 7px;
+  }
+  .memrow, .buttons {
+    gap: 5px;
+  }
+  button {
+    font-size: 0.91rem;
+    min-height: 36px;
+    border-radius: 6px;
+  }
 }
