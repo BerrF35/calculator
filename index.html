@@ -3,36 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Simple Calculator</title>
+  <title>Scientific Calculator</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@12.1.0/lib/browser/math.js"></script>
 </head>
 <body>
   <div class="calculator">
     <input type="text" id="display" class="display" disabled />
+    <div class="row">
+      <button onclick="handleFn('MC')">MC</button>
+      <button onclick="handleFn('MR')">MR</button>
+      <button onclick="handleFn('M+')">M+</button>
+      <button onclick="handleFn('M-')">M-</button>
+      <button onclick="angleMode()">DEG/RAD</button>
+    </div>
     <div class="buttons">
       <button onclick="clearDisplay()">C</button>
       <button onclick="deleteChar()">&larr;</button>
-      <button onclick="appendValue('%')">%</button>
-      <button onclick="appendValue('/')">÷</button>
-      
+      <button onclick="appendValue('(')">(</button>
+      <button onclick="appendValue(')')">)</button>
+      <button onclick="handleFn('Ans')">Ans</button>
       <button onclick="appendValue('7')">7</button>
       <button onclick="appendValue('8')">8</button>
       <button onclick="appendValue('9')">9</button>
-      <button onclick="appendValue('*')">&times;</button>
-      
+      <button onclick="appendValue('/')">÷</button>
+      <button onclick="appendValue('%')">%</button>
       <button onclick="appendValue('4')">4</button>
       <button onclick="appendValue('5')">5</button>
       <button onclick="appendValue('6')">6</button>
-      <button onclick="appendValue('-')">–</button>
-      
+      <button onclick="appendValue('*')">&times;</button>
+      <button onclick="appendValue('^')">xʸ</button>
       <button onclick="appendValue('1')">1</button>
       <button onclick="appendValue('2')">2</button>
       <button onclick="appendValue('3')">3</button>
-      <button onclick="appendValue('+')">+</button>
-      
-      <button onclick="appendValue('0')" class="zero">0</button>
+      <button onclick="appendValue('-')">–</button>
+      <button onclick="appendValue('1/')">1/x</button>
+      <button onclick="appendValue('0')">0</button>
       <button onclick="appendValue('.')">.</button>
+      <button onclick="appendValue('EXP')">EXP</button>
+      <button onclick="appendValue('+')">+</button>
       <button onclick="calculate()" class="equal">=</button>
+      <!-- Scientific Functions Row 1 -->
+      <button onclick="appendValue('pi')">π</button>
+      <button onclick="appendValue('e')">e</button>
+      <button onclick="appendValue('!')">n!</button>
+      <button onclick="appendValue('sqrt(')">√</button>
+      <button onclick="appendValue('cbrt(')">∛</button>
+      <button onclick="appendValue('log10(')">log</button>
+      <button onclick="appendValue('log(')">ln</button>
+      <button onclick="appendValue('10^')">10ˣ</button>
+      <button onclick="appendValue('exp(')">eˣ</button>
+      <!-- Scientific Functions Row 2 -->
+      <button onclick="handleTrig('sin')">sin</button>
+      <button onclick="handleTrig('cos')">cos</button>
+      <button onclick="handleTrig('tan')">tan</button>
+      <button onclick="handleTrig('asin')">sin⁻¹</button>
+      <button onclick="handleTrig('acos')">cos⁻¹</button>
+      <button onclick="handleTrig('atan')">tan⁻¹</button>
+      <button onclick="appendValue('sinh(')">sinh</button>
+      <button onclick="appendValue('cosh(')">cosh</button>
+      <button onclick="appendValue('tanh(')">tanh</button>
+      <button onclick="appendValue('asinh(')">sinh⁻¹</button>
+      <button onclick="appendValue('acosh(')">cosh⁻¹</button>
+      <button onclick="appendValue('atanh(')">tanh⁻¹</button>
+      <!-- Extra -->
+      <button onclick="appendValue('abs(')">|x|</button>
+      <button onclick="appendValue('round(')">rnd</button>
+      <button onclick="appendValue('floor(')">⌊x⌋</button>
+      <button onclick="appendValue('ceil(')">⌈x⌉</button>
+      <button onclick="randomNumber()">rand</button>
+      <!-- nPr & nCr, Fractions, Reciprocal can be added similarly -->
     </div>
   </div>
   <script src="script.js"></script>
