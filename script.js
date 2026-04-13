@@ -6,6 +6,8 @@ let expInputMode = false;
 
 // For basic functions
 function appendValue(val) {
+  if (display.value === 'Error') display.value = '';
+
   if (val === 'EXP') {
     display.value += 'E';
     expInputMode = true;
