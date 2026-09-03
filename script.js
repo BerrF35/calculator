@@ -1,14 +1,176 @@
+/* ==========================================================================
+   ApexCalc SaaS - Frontend Engine & UI Controller
+   ========================================================================== */
+
+// DOM Elements
 const display = document.getElementById('display');
 const subDisplay = document.getElementById('sub-display');
 const angleBadge = document.getElementById('angle-badge');
 const memoryBadge = document.getElementById('memory-badge');
+const calculatorCard = document.getElementById('calculator-card');
+const tabBasic = document.getElementById('tab-basic');
+const tabScientific = document.getElementById('tab-scientific');
+const modeHint = document.getElementById('mode-hint');
+const upgradeModal = document.getElementById('upgrade-modal');
+const authModal = document.getElementById('auth-modal');
+const planBadgeBtn = document.getElementById('plan-badge-btn');
+const planText = document.getElementById('plan-text');
+const sciLockIndicator = document.getElementById('sci-lock-indicator');
+const scientificPill = document.getElementById('scientific-pill');
+
+// Application State
+let currentMode = 'basic'; // 'basic' or 'scientific'
+let isPremium = false;     // Entitlement state (verified by server in Phase 8)
+let currentUser = null;    // Active user session (Supabase in Phase 4)
 
 let lastAnswer = '';
 let memory = 0;
-let angle = 'DEG'; // 'DEG' or 'RAD'
+let angle = 'DEG';         // 'DEG' or 'RAD'
 let justCalculated = false;
 
-// Helper: snap values very close to zero to eliminate floating-point roundoff
+// --------------------------------------------------------------------------
+// UI & Mode Controllers
+// --------------------------------------------------------------------------
+
+function setMode(mode) {
+  currentMode = mode;
+  if (mode === 'scientific') {
+    calculatorCard.classList.add('mode-scientific');
+    tabScientific.classList.add('active');
+    tabScientific.setAttribute('aria-selected', 'true');
+    tabBasic.classList.remove('active');
+    tabBasic.setAttribute('aria-selected', 'false');
+    modeHint.textContent = isPremium ? 'Scientific Active' : 'Scientific (Locked)';
+  } else {
+    calculatorCard.classList.remove('mode-scientific');
+    tabBasic.classList.add('active');
+    tabBasic.setAttribute('aria-selected', 'true');
+    tabScientific.classList.remove('active');
+    tabScientific.setAttribute('aria-selected', 'false');
+    modeHint.textContent = 'Free Mode';
+  }
+}
+
+// Intercept scientific actions: gate behind entitlement
+function handleScientificAction(actionName, param) {
+  if (!isPremium) {
+    openUpgradeModal();
+    return;
+  }
+
+  if (actionName === 'handleTrig') {
+    handleTrig(param);
+  } else if (actionName === 'appendValue') {
+    appendValue(param);
+  } else if (actionName === 'randomNumber') {
+    randomNumber();
+  }
+}
+
+// --------------------------------------------------------------------------
+// Modal Management (Upgrade & Auth)
+// --------------------------------------------------------------------------
+
+function openUpgradeModal() {
+  if (upgradeModal) {
+    upgradeModal.classList.add('open');
+  }
+}
+
+function closeUpgradeModal() {
+  if (upgradeModal) {
+    upgradeModal.classList.remove('open');
+  }
+}
+
+function openAuthModal() {
+  if (authModal) {
+    authModal.classList.add('open');
+  }
+}
+
+function closeAuthModal() {
+  if (authModal) {
+    authModal.classList.remove('open');
+  }
+}
+
+function onBackdropClick(event, modalId) {
+  if (event.target.id === modalId) {
+    if (modalId === 'upgrade-modal') closeUpgradeModal();
+    if (modalId === 'auth-modal') closeAuthModal();
+  }
+}
+
+// Simulated checkout handler (ready to be replaced with Stripe API in Phase 7)
+function handleUpgradeCheckout() {
+  // Demonstration simulated activation for testing UI states
+  isPremium = !isPremium;
+  updateEntitlementUI();
+  closeUpgradeModal();
+}
+
+function updateEntitlementUI() {
+  if (isPremium) {
+    if (planBadgeBtn) {
+      planBadgeBtn.className = 'plan-badge premium';
+      planBadgeBtn.title = 'Premium Active';
+    }
+    if (planText) planText.textContent = 'Premium Plan';
+    if (sciLockIndicator) sciLockIndicator.textContent = 'ACTIVE';
+    if (scientificPill) {
+      scientificPill.textContent = 'Unlocked';
+      scientificPill.style.background = 'rgba(16, 185, 129, 0.2)';
+      scientificPill.style.color = '#10b981';
+    }
+    if (calculatorCard) calculatorCard.classList.remove('free-mode-locked');
+    if (modeHint) modeHint.textContent = currentMode === 'scientific' ? 'Scientific Active' : 'Free Mode';
+  } else {
+    if (planBadgeBtn) {
+      planBadgeBtn.className = 'plan-badge free';
+      planBadgeBtn.title = 'View Subscription Details';
+    }
+    if (planText) planText.textContent = 'Free Plan';
+    if (sciLockIndicator) sciLockIndicator.textContent = 'PRO';
+    if (scientificPill) {
+      scientificPill.textContent = 'Premium';
+      scientificPill.style.background = 'rgba(255, 149, 0, 0.2)';
+      scientificPill.style.color = '#ff9500';
+    }
+    if (calculatorCard) calculatorCard.classList.add('free-mode-locked');
+    if (modeHint) modeHint.textContent = currentMode === 'scientific' ? 'Scientific (Locked)' : 'Free Mode';
+  }
+}
+
+function setAuthTab(tab) {
+  const tabSignIn = document.getElementById('tab-auth-signin');
+  const tabSignUp = document.getElementById('tab-auth-signup');
+  const submitBtn = document.getElementById('auth-submit-btn');
+
+  if (tab === 'signin') {
+    tabSignIn.classList.add('active');
+    tabSignUp.classList.remove('active');
+    if (submitBtn) submitBtn.textContent = 'Sign In';
+  } else {
+    tabSignUp.classList.add('active');
+    tabSignIn.classList.remove('active');
+    if (submitBtn) submitBtn.textContent = 'Create Account';
+  }
+}
+
+function handleAuthSubmit(e) {
+  e.preventDefault();
+  const statusMsg = document.getElementById('auth-status-msg');
+  if (statusMsg) {
+    statusMsg.style.color = '#ff9500';
+    statusMsg.textContent = 'Authentication service will connect in Phase 4 (Supabase).';
+  }
+}
+
+// --------------------------------------------------------------------------
+// Core Mathematical Calculation Engine
+// --------------------------------------------------------------------------
+
 function snapZero(val) {
   if (typeof val === 'number' && Math.abs(val) < 1e-12) {
     return 0;
@@ -16,24 +178,20 @@ function snapZero(val) {
   return val;
 }
 
-// Update the memory indicator badge in the UI
 function updateMemoryBadge() {
   if (memoryBadge) {
     memoryBadge.style.display = memory !== 0 ? 'inline-block' : 'none';
   }
 }
 
-// Pure math evaluation engine with angle support
 function evaluateExpression(expr, angleMode = 'DEG', prevAns = 0) {
   if (!expr || !expr.trim()) return '';
 
-  // Replace Ans safely with parenthesis around previous answer
   let sanitized = expr.replace(/\bAns\b/g, `(${prevAns || 0})`);
 
   const degToRad = (x) => (x * Math.PI) / 180;
   const radToDeg = (x) => (x * 180) / Math.PI;
 
-  // Build custom evaluation scope
   let scope = {
     pi: Math.PI,
     e: Math.E,
@@ -82,7 +240,6 @@ function evaluateExpression(expr, angleMode = 'DEG', prevAns = 0) {
   return String(rawResult);
 }
 
-// Append value or operator to the display
 function appendValue(val) {
   if (display.value === 'Error') {
     display.value = '0';
@@ -161,7 +318,6 @@ function calculate() {
   }
 }
 
-// Memory operations
 function handleFn(fn) {
   if (fn === 'MC') {
     memory = 0;
@@ -184,14 +340,13 @@ function handleFn(fn) {
         updateMemoryBadge();
       }
     } catch {
-      // Ignore if expression cannot be evaluated
+      // Expression error ignored
     }
   } else if (fn === 'Ans') {
     appendValue('Ans');
   }
 }
 
-// Angle mode switch (DEG <-> RAD)
 function angleMode() {
   angle = angle === 'DEG' ? 'RAD' : 'DEG';
   if (angleBadge) {
@@ -199,20 +354,24 @@ function angleMode() {
   }
 }
 
-// Trig button helper
 function handleTrig(fn) {
   appendValue(fn + '(');
 }
 
-// Random number insert (4 decimal places)
 function randomNumber() {
   const rand = snapZero(Math.random());
   appendValue(rand.toFixed(4));
 }
 
-// Global Keyboard Support
+// Global Keyboard Listener
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' && !e.target.disabled) return;
+
+  if (e.key === 'Escape') {
+    closeUpgradeModal();
+    closeAuthModal();
+    return;
+  }
 
   if ((e.key >= '0' && e.key <= '9') || ['+', '-', '*', '/', '.', '(', ')', '^', 'E', 'e', '%', '!'].includes(e.key)) {
     appendValue(e.key);
@@ -223,8 +382,11 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === 'Backspace') {
     deleteChar();
     e.preventDefault();
-  } else if (e.key.toLowerCase() === 'c' || e.key === 'Escape') {
+  } else if (e.key.toLowerCase() === 'c') {
     clearDisplay();
     e.preventDefault();
   }
 });
+
+// Initialize UI on load
+updateEntitlementUI();

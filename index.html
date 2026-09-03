@@ -3,81 +3,265 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculator</title>
+  <title>ApexCalc SaaS &mdash; Free & Scientific Calculator</title>
+  <meta name="description" content="Production-quality micro-SaaS calculator featuring free basic arithmetic and premium scientific features." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
 </head>
 <body>
-  <div class="calculator">
-    <div class="display-container">
-      <div class="display-status-bar">
-        <span id="angle-badge" class="badge">DEG</span>
-        <span id="memory-badge" class="badge memory-badge" style="display: none;">M</span>
-        <span id="sub-display" class="sub-display"></span>
+  <!-- SaaS Application Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+          <line x1="8" y1="6" x2="16" y2="6"></line>
+          <line x1="16" y1="14" x2="16" y2="18"></line>
+          <path d="M16 10h.01"></path>
+          <path d="M12 10h.01"></path>
+          <path d="M8 10h.01"></path>
+          <path d="M12 14h.01"></path>
+          <path d="M8 14h.01"></path>
+          <path d="M12 18h.01"></path>
+          <path d="M8 18h.01"></path>
+        </svg>
       </div>
-      <input type="text" id="display" class="display" disabled value="0" />
+      <span class="brand-name">ApexCalc</span>
+      <span class="brand-tag">SaaS</span>
     </div>
-    <div class="memrow">
-      <button id="btn-mc" onclick="handleFn('MC')">MC</button>
-      <button id="btn-mr" onclick="handleFn('MR')">MR</button>
-      <button id="btn-mplus" onclick="handleFn('M+')">M+</button>
-      <button id="btn-mminus" onclick="handleFn('M-')">M-</button>
-      <button id="btn-angle" onclick="angleMode()">DEG/RAD</button>
+    
+    <div class="header-actions">
+      <button id="plan-badge-btn" class="plan-badge free" onclick="openUpgradeModal()" title="View Subscription Details">
+        <span class="plan-dot"></span>
+        <span id="plan-text">Free Plan</span>
+        <span class="upgrade-action">Upgrade &rarr;</span>
+      </button>
+      <button id="auth-header-btn" class="btn-auth" onclick="openAuthModal()">Sign In</button>
     </div>
-    <div class="buttons">
-      <button onclick="clearDisplay()">C</button>
-      <button onclick="deleteChar()">&larr;</button>
-      <button onclick="appendValue('(')">(</button>
-      <button onclick="appendValue(')')">)</button>
-      <button onclick="handleFn('Ans')">Ans</button>
-      <button onclick="appendValue('%')">%</button>
-      <button onclick="appendValue('7')">7</button>
-      <button onclick="appendValue('8')">8</button>
-      <button onclick="appendValue('9')">9</button>
-      <button onclick="appendValue('/')">÷</button>
-      <button onclick="appendValue('^')">xʸ</button>
-      <button onclick="appendValue('1/')">1/x</button>
-      <button onclick="appendValue('4')">4</button>
-      <button onclick="appendValue('5')">5</button>
-      <button onclick="appendValue('6')">6</button>
-      <button onclick="appendValue('*')">&times;</button>
-      <button onclick="appendValue('sqrt(')">√</button>
-      <button onclick="appendValue('cbrt(')">∛</button>
-      <button onclick="appendValue('1')">1</button>
-      <button onclick="appendValue('2')">2</button>
-      <button onclick="appendValue('3')">3</button>
-      <button onclick="appendValue('-')">–</button>
-      <button onclick="appendValue('log10(')">log</button>
-      <button onclick="appendValue('log(')">ln</button>
-      <button onclick="appendValue('0')">0</button>
-      <button onclick="appendValue('.')">.</button>
-      <button onclick="appendValue('EXP')">EXP</button>
-      <button onclick="appendValue('+')">+</button>
-      <button onclick="appendValue('pi')">π</button>
-      <button onclick="appendValue('e')">e</button>
-      <button onclick="appendValue('!')">n!</button>
-      <button onclick="appendValue('10^')">10ˣ</button>
-      <button onclick="appendValue('exp(')">eˣ</button>
-      <button onclick="calculate()" class="equal">=</button>
-      <button onclick="handleTrig('sin')">sin</button>
-      <button onclick="handleTrig('cos')">cos</button>
-      <button onclick="handleTrig('tan')">tan</button>
-      <button onclick="handleTrig('asin')">sin⁻¹</button>
-      <button onclick="handleTrig('acos')">cos⁻¹</button>
-      <button onclick="handleTrig('atan')">tan⁻¹</button>
-      <button onclick="appendValue('sinh(')">sinh</button>
-      <button onclick="appendValue('cosh(')">cosh</button>
-      <button onclick="appendValue('tanh(')">tanh</button>
-      <button onclick="appendValue('asinh(')">sinh⁻¹</button>
-      <button onclick="appendValue('acosh(')">cosh⁻¹</button>
-      <button onclick="appendValue('atanh(')">tanh⁻¹</button>
-      <button onclick="appendValue('abs(')">|x|</button>
-      <button onclick="appendValue('round(')">rnd</button>
-      <button onclick="appendValue('floor(')">⌊x⌋</button>
-      <button onclick="appendValue('ceil(')">⌈x⌉</button>
-      <button onclick="randomNumber()">rand</button>
+  </header>
+
+  <!-- Main Calculator Card -->
+  <main class="app-main">
+    <div class="calculator-card" id="calculator-card">
+      
+      <!-- Mode Switcher (Basic vs Scientific) -->
+      <div class="mode-bar">
+        <div class="mode-tabs" role="tablist">
+          <button id="tab-basic" class="mode-tab active" role="tab" aria-selected="true" onclick="setMode('basic')">
+            Basic
+          </button>
+          <button id="tab-scientific" class="mode-tab" role="tab" aria-selected="false" onclick="setMode('scientific')">
+            Scientific
+            <span class="sparkle-badge" id="sci-lock-indicator">PRO</span>
+          </button>
+        </div>
+        <div class="mode-hint" id="mode-hint">Free Mode</div>
+      </div>
+
+      <!-- Display Screen -->
+      <div class="display-container">
+        <div class="display-status-bar">
+          <span id="angle-badge" class="badge">DEG</span>
+          <span id="memory-badge" class="badge memory-badge" style="display: none;">M</span>
+          <span id="sub-display" class="sub-display"></span>
+        </div>
+        <input type="text" id="display" class="display" disabled value="0" aria-label="Calculator display screen" />
+      </div>
+
+      <!-- Memory Toolbar -->
+      <div class="memrow">
+        <button id="btn-mc" onclick="handleFn('MC')">MC</button>
+        <button id="btn-mr" onclick="handleFn('MR')">MR</button>
+        <button id="btn-mplus" onclick="handleFn('M+')">M+</button>
+        <button id="btn-mminus" onclick="handleFn('M-')">M-</button>
+        <button id="btn-angle" onclick="angleMode()">DEG/RAD</button>
+      </div>
+
+      <!-- Keypads Container -->
+      <div class="keypads-layout" id="keypads-layout">
+        
+        <!-- Scientific Drawer (Premium Locked in Free Mode) -->
+        <div class="scientific-keypad" id="scientific-keypad">
+          <div class="keypad-section-label">
+            <span>Scientific Suite</span>
+            <span class="premium-pill" id="scientific-pill">Premium</span>
+          </div>
+
+          <div class="sci-grid">
+            <!-- Trig & Angles -->
+            <button class="btn-sci" onclick="handleScientificAction('handleTrig', 'sin')">sin</button>
+            <button class="btn-sci" onclick="handleScientificAction('handleTrig', 'cos')">cos</button>
+            <button class="btn-sci" onclick="handleScientificAction('handleTrig', 'tan')">tan</button>
+            <button class="btn-sci" onclick="handleScientificAction('handleTrig', 'asin')">sin⁻¹</button>
+            <button class="btn-sci" onclick="handleScientificAction('handleTrig', 'acos')">cos⁻¹</button>
+            <button class="btn-sci" onclick="handleScientificAction('handleTrig', 'atan')">tan⁻¹</button>
+
+            <!-- Hyperbolic -->
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'sinh(')">sinh</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'cosh(')">cosh</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'tanh(')">tanh</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'asinh(')">sinh⁻¹</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'acosh(')">cosh⁻¹</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'atanh(')">tanh⁻¹</button>
+
+            <!-- Powers & Roots -->
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', '^')">xʸ</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'sqrt(')">√</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'cbrt(')">∛</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', '1/')">1/x</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', '10^')">10ˣ</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'exp(')">eˣ</button>
+
+            <!-- Logs & Constants -->
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'log10(')">log</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'log(')">ln</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'pi')">π</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'e')">e</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', '!')">n!</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'EXP')">EXP</button>
+
+            <!-- Math utilities -->
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'abs(')">|x|</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'round(')">rnd</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'floor(')">⌊x⌋</button>
+            <button class="btn-sci" onclick="handleScientificAction('appendValue', 'ceil(')">⌈x⌉</button>
+            <button class="btn-sci col-span-2" onclick="handleScientificAction('randomNumber')">rand</button>
+          </div>
+        </div>
+
+        <!-- Basic Keypad (Always Free & Instant) -->
+        <div class="basic-keypad">
+          <div class="basic-grid">
+            <button class="btn-action" onclick="clearDisplay()">C</button>
+            <button class="btn-action" onclick="deleteChar()">&larr;</button>
+            <button class="btn-action" onclick="appendValue('(')">(</button>
+            <button class="btn-action" onclick="appendValue(')')">)</button>
+
+            <button class="btn-action" onclick="handleFn('Ans')">Ans</button>
+            <button class="btn-action" onclick="appendValue('%')">%</button>
+            <button class="btn-operator" onclick="appendValue('/')">&divide;</button>
+            <button class="btn-operator" onclick="appendValue('*')">&times;</button>
+
+            <button class="btn-num" onclick="appendValue('7')">7</button>
+            <button class="btn-num" onclick="appendValue('8')">8</button>
+            <button class="btn-num" onclick="appendValue('9')">9</button>
+            <button class="btn-operator" onclick="appendValue('-')">&minus;</button>
+
+            <button class="btn-num" onclick="appendValue('4')">4</button>
+            <button class="btn-num" onclick="appendValue('5')">5</button>
+            <button class="btn-num" onclick="appendValue('6')">6</button>
+            <button class="btn-operator" onclick="appendValue('+')">+</button>
+
+            <button class="btn-num" onclick="appendValue('1')">1</button>
+            <button class="btn-num" onclick="appendValue('2')">2</button>
+            <button class="btn-num" onclick="appendValue('3')">3</button>
+            <button class="btn-equal" onclick="calculate()">=</button>
+
+            <button class="btn-num col-span-2" onclick="appendValue('0')">0</button>
+            <button class="btn-num" onclick="appendValue('.')">.</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Upgrade / Paywall Modal -->
+  <div class="modal-backdrop" id="upgrade-modal" onclick="onBackdropClick(event, 'upgrade-modal')">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close-btn" onclick="closeUpgradeModal()" aria-label="Close modal">&times;</button>
+      
+      <div class="modal-badge">
+        <span class="pro-sparkle">✦</span>
+        <span>PREMIUM UPGRADE</span>
+      </div>
+
+      <h2 id="modal-title" class="modal-title">Unlock Scientific Calculator</h2>
+      <p class="modal-subtitle">
+        Elevate your workflow with advanced trigonometric, logarithmic, root, and hyperbolic mathematical operations.
+      </p>
+
+      <div class="features-checklist">
+        <div class="feature-item">
+          <span class="feature-check">&check;</span>
+          <span>Full Trigonometric & Inverse suite (sin, cos, tan, asin, acos, atan)</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&check;</span>
+          <span>Hyperbolic functions (sinh, cosh, tanh, and inverses)</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&check;</span>
+          <span>Powers, arbitrary roots (&radic;, &#8731;), reciprocals, 10&#739;, e&#739;</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&check;</span>
+          <span>Natural (ln) and common (log&#8321;&#8320;) logarithms</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&check;</span>
+          <span>Factorial (n!), math constants (&pi;, e), floor, ceil, round, and abs</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&check;</span>
+          <span>Cloud-verified entitlement stored securely on the server</span>
+        </div>
+      </div>
+
+      <div class="pricing-box">
+        <div class="price-header">
+          <span class="price-amount">$4.99</span>
+          <span class="price-period">/ month</span>
+        </div>
+        <span class="price-guarantee">Cancel anytime &middot; Instant activation</span>
+      </div>
+
+      <button id="btn-stripe-checkout" class="btn-checkout" onclick="handleUpgradeCheckout()">
+        <span class="lock-icon">&#128274;</span>
+        <span>Upgrade to Premium (Test Mode)</span>
+      </button>
+
+      <p class="checkout-footer">
+        Simulated Stripe Test Checkout &middot; No real charge incurred
+      </p>
     </div>
   </div>
+
+  <!-- Authentication Modal (Prepared for Phase 4) -->
+  <div class="modal-backdrop" id="auth-modal" onclick="onBackdropClick(event, 'auth-modal')">
+    <div class="modal-card auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+      <button class="modal-close-btn" onclick="closeAuthModal()" aria-label="Close modal">&times;</button>
+      
+      <div class="auth-header">
+        <h2 id="auth-modal-title" class="modal-title">Account Access</h2>
+        <p class="modal-subtitle">Sign in or create an account to access your subscription.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="tab-auth-signin" class="auth-tab active" onclick="setAuthTab('signin')">Sign In</button>
+        <button id="tab-auth-signup" class="auth-tab" onclick="setAuthTab('signup')">Sign Up</button>
+      </div>
+
+      <form class="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" required placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
+        </div>
+        <button type="submit" id="auth-submit-btn" class="btn-checkout">Continue</button>
+      </form>
+
+      <div class="auth-status-msg" id="auth-status-msg"></div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
