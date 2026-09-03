@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculator Math Unit Tests</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+</head>
+<body style="font-family: monospace; padding: 20px;">
+  <h2>Calculator Math Engine Test Suite</h2>
+  <div id="results">Running tests...</div>
+
+  <script>
+    function snapZero(val) {
+      if (typeof val === 'number' && Math.abs(val) < 1e-12) {
+        return 0;
+      }
+      return val;
+    }
+
+    function evaluateExpression(expr, angleMode = 'DEG', lastAnswer = 0) {
+      if (!expr || !expr.trim()) return '';
+
+      // Replace Ans
+      let sanitized = expr.replace(/\bAns\b/g, `(${lastAnswer || 0})`);
+
+      // Build scope based on angle mode
+      let scope = {
+        pi: Math.PI,
+        e: Math.E,
+        Ans: lastAnswer || 0
+      };
+
+      const degToRad = (x) => x * Math.PI / 180;
+      const radToDeg = (x) => x * 180 / Math.PI;
+
+      if (angleMode === 'DEG') {
+        scope.sin = (x) => snapZero(math.sin(degToRad(x)));
+        scope.cos = (x) => snapZero(math.cos(degToRad(x)));
+        scope.tan = (x) => {
+          // Check for vertical asymptotes: 90, 270, etc.
+          const normalized = ((x % 180) + 180) % 180;
+          if (Math.abs(normalized - 90) < 1e-10) {
+            throw new Error('Undefined (tan 90°)');
+          }
+          return snapZero(math.tan(degToRad(x)));
+        };
+        scope.asin = (x) => {
+          if (x < -1 || x > 1) throw new Error('Domain error');
+          return snapZero(radToDeg(math.asin(x)));
+        };
+        scope.acos = (x) => {
+          if (x < -1 || x > 1) throw new Error('Domain error');
+          return snapZero(radToDeg(math.acos(x)));
+        };
+        scope.atan = (x) => snapZero(radToDeg(math.atan(x)));
+      } else {
+        scope.sin = (x) => snapZero(math.sin(x));
+        scope.cos = (x) => snapZero(math.cos(x));
+        scope.tan = (x) => snapZero(math.tan(x));
+        scope.asin = (x) => {
+          if (x < -1 || x > 1) throw new Error('Domain error');
+          return snapZero(math.asin(x));
+        };
+        scope.acos = (x) => {
+          if (x < -1 || x > 1) throw new Error('Domain error');
+          return snapZero(math.acos(x));
+        };
+        scope.atan = (x) => snapZero(math.atan(x));
+      }
+
+      let rawResult = math.evaluate(sanitized, scope);
+      if (typeof rawResult === 'number') {
+        rawResult = snapZero(rawResult);
+        return math.format(rawResult, { precision: 12 });
+      }
+      return String(rawResult);
+    }
+
+    const testCases = [
+      { name: 'Basic addition & operator precedence', expr: '2 + 3 * 4', mode: 'DEG', expected: '14' },
+      { name: 'Parentheses override precedence', expr: '(2 + 3) * 4', mode: 'DEG', expected: '20' },
+      { name: 'Floating-point cleanup', expr: '0.1 + 0.2', mode: 'DEG', expected: '0.3' },
+      { name: 'Degree sin(30)', expr: 'sin(30)', mode: 'DEG', expected: '0.5' },
+      { name: 'Degree cos(60)', expr: 'cos(60)', mode: 'DEG', expected: '0.5' },
+      { name: 'Degree cos(90) snaps to 0', expr: 'cos(90)', mode: 'DEG', expected: '0' },
+      { name: 'Degree tan(45)', expr: 'tan(45)', mode: 'DEG', expected: '1' },
+      { name: 'Degree asin(0.5)', expr: 'asin(0.5)', mode: 'DEG', expected: '30' },
+      { name: 'Degree acos(0.5)', expr: 'acos(0.5)', mode: 'DEG', expected: '60' },
+      { name: 'Degree atan(1)', expr: 'atan(1)', mode: 'DEG', expected: '45' },
+      { name: 'Radian sin(pi / 6)', expr: 'sin(pi / 6)', mode: 'RAD', expected: '0.5' },
+      { name: 'Radian cos(0)', expr: 'cos(0)', mode: 'RAD', expected: '1' },
+      { name: 'Powers 2^3', expr: '2^3', mode: 'DEG', expected: '8' },
+      { name: 'Square root sqrt(16)', expr: 'sqrt(16)', mode: 'DEG', expected: '4' },
+      { name: 'Cube root cbrt(27)', expr: 'cbrt(27)', mode: 'DEG', expected: '3' },
+      { name: 'Log base 10 log10(100)', expr: 'log10(100)', mode: 'DEG', expected: '2' },
+      { name: 'Natural log log(e)', expr: 'log(e)', mode: 'DEG', expected: '1' },
+      { name: 'Factorial 5!', expr: '5!', mode: 'DEG', expected: '120' },
+      { name: 'Hyperbolic sinh(0)', expr: 'sinh(0)', mode: 'DEG', expected: '0' },
+      { name: 'Hyperbolic cosh(0)', expr: 'cosh(0)', mode: 'DEG', expected: '1' },
+      { name: 'Percentage 100 + 15%', expr: '100 + 15%', mode: 'DEG', expected: '115' },
+      { name: 'Ans substitution with lastAnswer=50', expr: 'Ans * 2', mode: 'DEG', lastAnswer: 50, expected: '100' }
+    ];
+
+    let passed = 0;
+    let failed = 0;
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.innerHTML = '';
+
+    testCases.forEach((t) => {
+      try {
+        const actual = evaluateExpression(t.expr, t.mode, t.lastAnswer);
+        const match = actual === t.expected;
+        if (match) {
+          passed++;
+          resultsDiv.innerHTML += `<div style="color: green;">PASS: ${t.name} -> ${t.expr} = ${actual}</div>`;
+        } else {
+          failed++;
+          resultsDiv.innerHTML += `<div style="color: red;">FAIL: ${t.name} -> ${t.expr} got "${actual}", expected "${t.expected}"</div>`;
+        }
+      } catch (err) {
+        failed++;
+        resultsDiv.innerHTML += `<div style="color: red;">ERROR: ${t.name} -> ${err.message}</div>`;
+      }
+    });
+
+    resultsDiv.innerHTML = `<h3>Results: ${passed} Passed, ${failed} Failed</h3>` + resultsDiv.innerHTML;
+    window.testSuiteResults = { passed, failed, total: testCases.length };
+  </script>
+</body>
+</html>

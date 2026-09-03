@@ -9,13 +9,20 @@
 </head>
 <body>
   <div class="calculator">
-    <input type="text" id="display" class="display" disabled />
+    <div class="display-container">
+      <div class="display-status-bar">
+        <span id="angle-badge" class="badge">DEG</span>
+        <span id="memory-badge" class="badge memory-badge" style="display: none;">M</span>
+        <span id="sub-display" class="sub-display"></span>
+      </div>
+      <input type="text" id="display" class="display" disabled value="0" />
+    </div>
     <div class="memrow">
-      <button onclick="handleFn('MC')">MC</button>
-      <button onclick="handleFn('MR')">MR</button>
-      <button onclick="handleFn('M+')">M+</button>
-      <button onclick="handleFn('M-')">M-</button>
-      <button onclick="angleMode()">DEG/RAD</button>
+      <button id="btn-mc" onclick="handleFn('MC')">MC</button>
+      <button id="btn-mr" onclick="handleFn('MR')">MR</button>
+      <button id="btn-mplus" onclick="handleFn('M+')">M+</button>
+      <button id="btn-mminus" onclick="handleFn('M-')">M-</button>
+      <button id="btn-angle" onclick="angleMode()">DEG/RAD</button>
     </div>
     <div class="buttons">
       <button onclick="clearDisplay()">C</button>

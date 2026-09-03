@@ -1,100 +1,230 @@
 const display = document.getElementById('display');
+const subDisplay = document.getElementById('sub-display');
+const angleBadge = document.getElementById('angle-badge');
+const memoryBadge = document.getElementById('memory-badge');
+
 let lastAnswer = '';
 let memory = 0;
-let angle = 'DEG'; // or 'RAD'
-let expInputMode = false;
+let angle = 'DEG'; // 'DEG' or 'RAD'
+let justCalculated = false;
 
-// For basic functions
+// Helper: snap values very close to zero to eliminate floating-point roundoff
+function snapZero(val) {
+  if (typeof val === 'number' && Math.abs(val) < 1e-12) {
+    return 0;
+  }
+  return val;
+}
+
+// Update the memory indicator badge in the UI
+function updateMemoryBadge() {
+  if (memoryBadge) {
+    memoryBadge.style.display = memory !== 0 ? 'inline-block' : 'none';
+  }
+}
+
+// Pure math evaluation engine with angle support
+function evaluateExpression(expr, angleMode = 'DEG', prevAns = 0) {
+  if (!expr || !expr.trim()) return '';
+
+  // Replace Ans safely with parenthesis around previous answer
+  let sanitized = expr.replace(/\bAns\b/g, `(${prevAns || 0})`);
+
+  const degToRad = (x) => (x * Math.PI) / 180;
+  const radToDeg = (x) => (x * 180) / Math.PI;
+
+  // Build custom evaluation scope
+  let scope = {
+    pi: Math.PI,
+    e: Math.E,
+    Ans: prevAns || 0
+  };
+
+  if (angleMode === 'DEG') {
+    scope.sin = (x) => snapZero(math.sin(degToRad(x)));
+    scope.cos = (x) => snapZero(math.cos(degToRad(x)));
+    scope.tan = (x) => {
+      const normalized = ((x % 180) + 180) % 180;
+      if (Math.abs(normalized - 90) < 1e-10) {
+        throw new Error('Undefined (tan 90°)');
+      }
+      return snapZero(math.tan(degToRad(x)));
+    };
+    scope.asin = (x) => {
+      if (x < -1 || x > 1) throw new Error('Domain error');
+      return snapZero(radToDeg(math.asin(x)));
+    };
+    scope.acos = (x) => {
+      if (x < -1 || x > 1) throw new Error('Domain error');
+      return snapZero(radToDeg(math.acos(x)));
+    };
+    scope.atan = (x) => snapZero(radToDeg(math.atan(x)));
+  } else {
+    scope.sin = (x) => snapZero(math.sin(x));
+    scope.cos = (x) => snapZero(math.cos(x));
+    scope.tan = (x) => snapZero(math.tan(x));
+    scope.asin = (x) => {
+      if (x < -1 || x > 1) throw new Error('Domain error');
+      return snapZero(math.asin(x));
+    };
+    scope.acos = (x) => {
+      if (x < -1 || x > 1) throw new Error('Domain error');
+      return snapZero(math.acos(x));
+    };
+    scope.atan = (x) => snapZero(math.atan(x));
+  }
+
+  let rawResult = math.evaluate(sanitized, scope);
+  if (typeof rawResult === 'number') {
+    rawResult = snapZero(rawResult);
+    return math.format(rawResult, { precision: 12 });
+  }
+  return String(rawResult);
+}
+
+// Append value or operator to the display
 function appendValue(val) {
-  if (display.value === 'Error') display.value = '';
+  if (display.value === 'Error') {
+    display.value = '0';
+  }
+
+  const isOperator = ['+', '-', '*', '/', '^', '%', '!'].includes(val);
+
+  if (justCalculated) {
+    justCalculated = false;
+    if (!isOperator) {
+      display.value = '';
+    }
+  }
+
+  if (display.value === '0' && val !== '.' && !isOperator) {
+    display.value = '';
+  }
 
   if (val === 'EXP') {
     display.value += 'E';
-    expInputMode = true;
     return;
   }
-  // Proper input format fixes for fraction, reciprocal, powers, 10^x, e^x
+
   if (val === '1/') {
-    display.value += '1/(';
+    if (display.value && display.value !== '0') {
+      display.value = `1/(${display.value})`;
+    } else {
+      display.value += '1/(';
+    }
     return;
   }
+
   if (val === '10^') {
     display.value += '10^';
     return;
   }
+
   display.value += val;
 }
 
 function clearDisplay() {
-  display.value = '';
-  expInputMode = false;
+  display.value = '0';
+  if (subDisplay) subDisplay.textContent = '';
+  justCalculated = false;
 }
 
 function deleteChar() {
+  if (display.value === 'Error' || justCalculated) {
+    clearDisplay();
+    return;
+  }
   display.value = display.value.slice(0, -1);
-}
-
-function calculate() {
-  let expr = display.value.trim();
-  if (!expr) return;
-  // Handle Ans
-  expr = expr.replace(/Ans/g, lastAnswer || '0');
-  // Handle degree/radian for trig
-  expr = expr.replace(/sin\(/g, angle === 'DEG' ? 'sin(degToRad(' : 'sin(');
-  expr = expr.replace(/cos\(/g, angle === 'DEG' ? 'cos(degToRad(' : 'cos(');
-  expr = expr.replace(/tan\(/g, angle === 'DEG' ? 'tan(degToRad(' : 'tan(');
-  expr = expr.replace(/asin\(/g, angle === 'DEG' ? 'radToDeg(asin(' : 'asin(');
-  expr = expr.replace(/acos\(/g, angle === 'DEG' ? 'radToDeg(acos(' : 'acos(');
-  expr = expr.replace(/atan\(/g, angle === 'DEG' ? 'radToDeg(atan(' : 'atan(');
-
-  // Custom conversion functions for math.js
-  function degToRad(x) { return x * Math.PI / 180; }
-  function radToDeg(x) { return x * 180 / Math.PI; }
-  try {
-    const scope = { pi: Math.PI, e: Math.E, Ans: lastAnswer, degToRad, radToDeg };
-    let result = math.evaluate(expr, scope);
-    lastAnswer = result;
-    display.value = result;
-  } catch (err) {
-    display.value = 'Error';
+  if (!display.value) {
+    display.value = '0';
   }
 }
 
-// Scientific memory functions
-function handleFn(fn) {
-  if (fn === 'MC') memory = 0;
-  else if (fn === 'MR') display.value += memory;
-  else if (fn === 'M+') memory += parseFloat(display.value || '0');
-  else if (fn === 'M-') memory -= parseFloat(display.value || '0');
-  else if (fn === 'Ans') display.value += lastAnswer;
+function calculate() {
+  const expr = display.value.trim();
+  if (!expr) return;
+
+  try {
+    const result = evaluateExpression(expr, angle, lastAnswer);
+    if (subDisplay) {
+      subDisplay.textContent = `${expr} =`;
+    }
+    lastAnswer = result;
+    display.value = result;
+    justCalculated = true;
+  } catch (err) {
+    if (subDisplay) {
+      subDisplay.textContent = `${expr} =`;
+    }
+    display.value = 'Error';
+    justCalculated = true;
+  }
 }
 
-// Angle mode switch
+// Memory operations
+function handleFn(fn) {
+  if (fn === 'MC') {
+    memory = 0;
+    updateMemoryBadge();
+  } else if (fn === 'MR') {
+    if (display.value === '0' || justCalculated) {
+      display.value = String(memory);
+      justCalculated = false;
+    } else {
+      display.value += String(memory);
+    }
+  } else if (fn === 'M+' || fn === 'M-') {
+    try {
+      const currentVal = evaluateExpression(display.value, angle, lastAnswer);
+      const num = parseFloat(currentVal);
+      if (!isNaN(num)) {
+        if (fn === 'M+') memory += num;
+        else memory -= num;
+        memory = snapZero(memory);
+        updateMemoryBadge();
+      }
+    } catch {
+      // Ignore if expression cannot be evaluated
+    }
+  } else if (fn === 'Ans') {
+    appendValue('Ans');
+  }
+}
+
+// Angle mode switch (DEG <-> RAD)
 function angleMode() {
   angle = angle === 'DEG' ? 'RAD' : 'DEG';
-  alert(`Angle mode: ${angle}`);
+  if (angleBadge) {
+    angleBadge.textContent = angle;
+  }
 }
 
-// Trig/grouped handler (for UI clarity)
+// Trig button helper
 function handleTrig(fn) {
   appendValue(fn + '(');
 }
 
-// Random number insert
+// Random number insert (4 decimal places)
 function randomNumber() {
-  display.value += Math.random();
+  const rand = snapZero(Math.random());
+  appendValue(rand.toFixed(4));
 }
 
-// Keyboard support
+// Global Keyboard Support
 document.addEventListener('keydown', (e) => {
-  if ((e.key >= '0' && e.key <= '9') || ['+', '-', '*', '/', '.', '(', ')', '^', 'E', 'e'].includes(e.key)) {
+  if (e.target.tagName === 'INPUT' && !e.target.disabled) return;
+
+  if ((e.key >= '0' && e.key <= '9') || ['+', '-', '*', '/', '.', '(', ')', '^', 'E', 'e', '%', '!'].includes(e.key)) {
     appendValue(e.key);
+    e.preventDefault();
   } else if (e.key === 'Enter' || e.key === '=') {
     calculate();
     e.preventDefault();
   } else if (e.key === 'Backspace') {
     deleteChar();
-  } else if (e.key.toLowerCase() === 'c') {
+    e.preventDefault();
+  } else if (e.key.toLowerCase() === 'c' || e.key === 'Escape') {
     clearDisplay();
+    e.preventDefault();
   }
 });
