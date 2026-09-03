@@ -183,9 +183,12 @@ function updateEntitlementUI() {
 }
 
 function setAuthTab(tab) {
+  activeAuthTab = tab;
   const tabSignIn = document.getElementById('tab-auth-signin');
   const tabSignUp = document.getElementById('tab-auth-signup');
   const submitBtn = document.getElementById('auth-submit-btn');
+  const statusMsg = document.getElementById('auth-status-msg');
+  if (statusMsg) statusMsg.textContent = '';
 
   if (tab === 'signin') {
     if (tabSignIn) tabSignIn.classList.add('active');
@@ -222,7 +225,11 @@ async function handleAuthSubmit(e) {
   if (submitBtn) submitBtn.disabled = true;
 
   try {
-    if (activeAuthTab === 'signup') {
+    const isSignUp = activeAuthTab === 'signup' ||
+      document.getElementById('tab-auth-signup')?.classList.contains('active') ||
+      submitBtn?.textContent.toLowerCase().includes('create');
+
+    if (isSignUp) {
       const { data, error } = await supabaseClient.auth.signUp({ email, password });
       if (error) throw error;
       if (statusMsg) {

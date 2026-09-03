@@ -1,19 +1,17 @@
 /* ==========================================================================
    ApexCalc - Client Configuration
    
-   INSTRUCTIONS FOR YOU:
-   1. Open your Supabase Dashboard: https://supabase.com/dashboard
-   2. Go to your Project -> Project Settings -> API
-   3. Copy "Project URL" and paste below in `url`.
-   4. Copy the "anon" / "public" key and paste below in `anonKey`.
+   Configured with your Supabase Project details:
+   - Project Reference: fwacrzumdhcyeyiwnnhy
+   - Publishable Key: sb_publishable__EYaJZtA9sfsXuBA_cIlEw_DAPWrlmC
    
    SECURITY NOTE:
-   - The "anon" key is SAFE to expose in public frontend code. It only has
-     access to data permitted by Row Level Security (RLS) policies.
-   - NEVER paste your "service_role" secret key here.
+   - This publishable key is public and safe to use in client code.
+   - It is protected by Postgres Row Level Security (RLS).
+   - NEVER expose your secret key (sb_secret_...) in client code.
    ========================================================================== */
 
 const SUPABASE_CONFIG = {
-  url: 'YOUR_SUPABASE_URL_HERE',
-  anonKey: 'YOUR_SUPABASE_ANON_KEY_HERE'
+  url: 'https://fwacrzumdhcyeyiwnnhy.supabase.co',
+  anonKey: 'sb_publishable__EYaJZtA9sfsXuBA_cIlEw_DAPWrlmC'
 };
