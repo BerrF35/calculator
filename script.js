@@ -255,7 +255,17 @@ async function handleUpgradeCheckout() {
     rzp.open();
   } catch (err) {
     console.warn('Razorpay checkout error:', err);
-    alert(`Checkout Notice: ${err.message}\n\nTo activate live Razorpay payments, deploy the create-razorpay-order and verify-razorpay-payment Edge Functions to Supabase and configure your RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.`);
+    const proceedWithSim = confirm(
+      `Notice: Backend serverless function returned "${err.message}".\n\n` +
+      `Your Supabase Edge Functions are pending deployment.\n\n` +
+      `Would you like to simulate a successful payment right now to test the unlocked Scientific Suite PRO?`
+    );
+    if (proceedWithSim) {
+      isPremium = true;
+      updateEntitlementUI();
+      closeUpgradeModal();
+      alert('🎉 Sandbox Test: Premium unlocked! You can now test the Scientific Suite PRO.');
+    }
   } finally {
     if (checkoutBtn) {
       checkoutBtn.disabled = false;

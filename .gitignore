@@ -1,0 +1,3 @@
+supabase.exe
+*.log
+__pycache__/
