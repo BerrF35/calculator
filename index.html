@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ApexCalc SaaS &mdash; Free & Scientific Calculator</title>
-  <meta name="description" content="Production-quality micro-SaaS calculator featuring free basic arithmetic and premium scientific features." />
+  <title>ApexCalc &mdash; Free & Scientific Calculator</title>
+  <meta name="description" content="Production-quality calculator featuring free basic arithmetic and premium scientific features." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
 </head>
 <body>
-  <!-- SaaS Application Header -->
+  <!-- Application Header -->
   <header class="app-header">
     <div class="brand">
       <div class="brand-icon">
@@ -30,12 +30,10 @@
         </svg>
       </div>
       <span class="brand-name">ApexCalc</span>
-      <span class="brand-tag">SaaS</span>
     </div>
     
     <div class="header-actions">
       <button id="plan-badge-btn" class="plan-badge free" onclick="openUpgradeModal()" title="View Subscription Details">
-        <span class="plan-dot"></span>
         <span id="plan-text">Free Plan</span>
         <span class="upgrade-action">Upgrade &rarr;</span>
       </button>
@@ -212,21 +210,39 @@
         </div>
       </div>
 
-      <div class="pricing-box">
-        <div class="price-header">
-          <span class="price-amount">$4.99</span>
-          <span class="price-period">/ month</span>
+      <!-- Pricing Plan Selector (Rupee) -->
+      <div class="pricing-plans">
+        <div class="pricing-option" id="plan-opt-monthly" onclick="selectPricingPlan('monthly')">
+          <div class="pricing-radio-row">
+            <input type="radio" name="billing_cycle" id="radio-monthly" />
+            <label for="radio-monthly" class="plan-label">Monthly</label>
+          </div>
+          <div class="pricing-figure">
+            <span class="currency">₹</span><span class="amount">100</span><span class="freq">/ month</span>
+          </div>
+          <div class="pricing-subtext">Billed monthly &middot; Standard rate</div>
         </div>
-        <span class="price-guarantee">Cancel anytime &middot; Instant activation</span>
+
+        <div class="pricing-option active" id="plan-opt-yearly" onclick="selectPricingPlan('yearly')">
+          <div class="discount-pill">SAVE 17%</div>
+          <div class="pricing-radio-row">
+            <input type="radio" name="billing_cycle" id="radio-yearly" checked />
+            <label for="radio-yearly" class="plan-label">Annual Plan</label>
+          </div>
+          <div class="pricing-figure">
+            <span class="currency">₹</span><span class="amount">1,000</span><span class="freq">/ year</span>
+          </div>
+          <div class="pricing-subtext"><strong>₹83/mo equivalent</strong> &middot; Saves ₹200 vs ₹1,200/yr monthly</div>
+        </div>
       </div>
 
       <button id="btn-stripe-checkout" class="btn-checkout" onclick="handleUpgradeCheckout()">
         <span class="lock-icon">&#128274;</span>
-        <span>Upgrade to Premium (Test Mode)</span>
+        <span id="btn-checkout-label">Upgrade Annual &mdash; ₹1,000/year (Save 17%)</span>
       </button>
 
       <p class="checkout-footer">
-        Simulated Stripe Test Checkout &middot; No real charge incurred
+        Stripe Test Environment &middot; Instant access &middot; Cancel anytime
       </p>
     </div>
   </div>

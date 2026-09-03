@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ApexCalc SaaS - Modern Design System & Stylesheet
+   ApexCalc - Modern Design System & Stylesheet
    ========================================================================== */
 
 :root {
@@ -54,7 +54,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   SaaS Header Bar
+   Application Header Bar
    -------------------------------------------------------------------------- */
 .app-header {
   width: 100%;
@@ -92,17 +92,6 @@ body {
   color: var(--color-text-primary);
 }
 
-.brand-tag {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--accent-purple-bg);
-  color: var(--accent-purple);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .header-actions {
   display: flex;
   align-items: center;
@@ -113,9 +102,9 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 7px 14px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   border: 1px solid var(--bg-card-border);
   background: #191c27;
@@ -130,15 +119,9 @@ body {
   border-color: #3b4257;
 }
 
-.plan-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent-orange);
-}
-
-.plan-badge.premium .plan-dot {
-  background: var(--accent-green);
+.plan-badge.premium {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #c9d1e3;
 }
 
 .upgrade-action {
@@ -523,8 +506,8 @@ button {
   border: 1px solid #2b3145;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
   width: 100%;
-  max-width: 480px;
-  padding: 32px 28px;
+  max-width: 490px;
+  padding: 30px 26px;
   position: relative;
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -557,7 +540,7 @@ button {
   background: var(--accent-orange-glow);
   color: var(--accent-orange);
   letter-spacing: 0.5px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .modal-title {
@@ -569,19 +552,19 @@ button {
 }
 
 .modal-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--color-text-secondary);
   line-height: 1.45;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .features-checklist {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 9px;
+  margin-bottom: 20px;
   background: #11131b;
-  padding: 16px;
+  padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid #212636;
 }
@@ -590,7 +573,7 @@ button {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: #cdd5e8;
   line-height: 1.35;
 }
@@ -601,30 +584,101 @@ button {
   font-size: 0.95rem;
 }
 
-.pricing-box {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 18px;
-  padding: 0 4px;
+/* Pricing Plan Cards (Monthly vs Yearly) */
+.pricing-plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.price-amount {
-  font-size: 1.8rem;
+.pricing-option {
+  background: #11131c;
+  border: 1px solid #252b3d;
+  border-radius: 12px;
+  padding: 14px 14px 12px 14px;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.pricing-option:hover {
+  border-color: #3f4761;
+  background: #161924;
+}
+
+.pricing-option.active {
+  border-color: var(--accent-orange);
+  background: rgba(255, 149, 0, 0.05);
+  box-shadow: 0 0 0 1px var(--accent-orange);
+}
+
+.pricing-radio-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.pricing-radio-row input[type="radio"] {
+  accent-color: var(--accent-orange);
+  cursor: pointer;
+}
+
+.plan-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.discount-pill {
+  position: absolute;
+  top: -9px;
+  right: 10px;
+  font-size: 0.65rem;
   font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--accent-green);
+  color: #0b0d12;
+  letter-spacing: 0.3px;
+}
+
+.pricing-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.pricing-figure .currency {
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.price-period {
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  font-weight: 500;
+.pricing-figure .amount {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--color-text-primary);
 }
 
-.price-guarantee {
-  font-size: 0.75rem;
-  color: var(--accent-green);
-  font-weight: 600;
+.pricing-figure .freq {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-left: 2px;
+}
+
+.pricing-subtext {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+.pricing-option.active .pricing-subtext {
+  color: #a4adc2;
 }
 
 .btn-checkout {
@@ -633,7 +687,7 @@ button {
   border-radius: 10px;
   background: linear-gradient(135deg, #ff9500 0%, #ff5e3a 100%);
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -767,6 +821,10 @@ button {
 
   .sci-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .pricing-plans {
+    grid-template-columns: 1fr;
   }
 
   .display {

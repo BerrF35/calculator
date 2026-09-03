@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ApexCalc SaaS - Frontend Engine & UI Controller
+   ApexCalc - Frontend Engine & UI Controller
    ========================================================================== */
 
 // DOM Elements
@@ -99,6 +99,31 @@ function onBackdropClick(event, modalId) {
   if (event.target.id === modalId) {
     if (modalId === 'upgrade-modal') closeUpgradeModal();
     if (modalId === 'auth-modal') closeAuthModal();
+  }
+}
+
+let selectedPlan = 'yearly'; // 'monthly' or 'yearly'
+
+function selectPricingPlan(plan) {
+  selectedPlan = plan;
+  const optMonthly = document.getElementById('plan-opt-monthly');
+  const optYearly = document.getElementById('plan-opt-yearly');
+  const radioMonthly = document.getElementById('radio-monthly');
+  const radioYearly = document.getElementById('radio-yearly');
+  const checkoutLabel = document.getElementById('btn-checkout-label');
+
+  if (plan === 'monthly') {
+    if (optMonthly) optMonthly.classList.add('active');
+    if (optYearly) optYearly.classList.remove('active');
+    if (radioMonthly) radioMonthly.checked = true;
+    if (radioYearly) radioYearly.checked = false;
+    if (checkoutLabel) checkoutLabel.textContent = 'Upgrade Monthly \u2014 \u20B9100/month';
+  } else {
+    if (optYearly) optYearly.classList.add('active');
+    if (optMonthly) optMonthly.classList.remove('active');
+    if (radioYearly) radioYearly.checked = true;
+    if (radioMonthly) radioMonthly.checked = false;
+    if (checkoutLabel) checkoutLabel.textContent = 'Upgrade Annual \u2014 \u20B91,000/year (Save 17%)';
   }
 }
 
