@@ -142,7 +142,7 @@ function selectPricingPlan(plan) {
   }
 }
 
-// Checkout handler with Supabase Edge Functions & Stripe
+// Checkout handler with Razorpay & Supabase Edge Functions
 async function handleUpgradeCheckout() {
   if (!currentUser) {
     closeUpgradeModal();
@@ -159,15 +159,15 @@ async function handleUpgradeCheckout() {
   const originalHtml = checkoutBtn ? checkoutBtn.innerHTML : '';
   if (checkoutBtn) {
     checkoutBtn.disabled = true;
-    checkoutBtn.innerHTML = '<span>Creating secure checkout...</span>';
+    checkoutBtn.innerHTML = '<span>Initializing Razorpay...</span>';
   }
 
   try {
     const session = (await supabaseClient.auth.getSession()).data.session;
     if (!session) throw new Error('Authentication session expired. Please sign in again.');
 
-    const checkoutEndpoint = `${SUPABASE_CONFIG.url}/functions/v1/create-checkout`;
-    const response = await fetch(checkoutEndpoint, {
+    const orderEndpoint = `${SUPABASE_CONFIG.url}/functions/v1/create-razorpay-order`;
+    const response = await fetch(orderEndpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${session.access_token}`,
@@ -175,20 +175,83 @@ async function handleUpgradeCheckout() {
       },
       body: JSON.stringify({
         plan: selectedPlan,
-        returnUrl: window.location.origin + window.location.pathname,
       }),
     });
 
-    const data = await response.json();
-    if (!response.ok || !data.url) {
-      throw new Error(data.error || 'Checkout service unavailable.');
+    const orderData = await response.json();
+    if (!response.ok || !orderData.orderId) {
+      throw new Error(orderData.error || 'Unable to create Razorpay order.');
     }
 
-    // Redirect to hosted Stripe checkout page
-    window.location.href = data.url;
+    // Open Razorpay Standard In-Page Checkout Modal
+    const options = {
+      key: orderData.keyId,
+      amount: orderData.amount,
+      currency: orderData.currency || 'INR',
+      name: 'ApexCalc',
+      description: selectedPlan === 'yearly' ? 'Annual Plan (Save 17%)' : 'Monthly Plan',
+      order_id: orderData.orderId,
+      prefill: {
+        email: currentUser.email,
+      },
+      theme: {
+        color: '#ff9500',
+      },
+      handler: async function (paymentRes) {
+        if (checkoutBtn) checkoutBtn.innerHTML = '<span>Verifying payment...</span>';
+
+        try {
+          // Verify payment signature cryptographically on the server
+          const verifyEndpoint = `${SUPABASE_CONFIG.url}/functions/v1/verify-razorpay-payment`;
+          const vRes = await fetch(verifyEndpoint, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              razorpay_order_id: paymentRes.razorpay_order_id,
+              razorpay_payment_id: paymentRes.razorpay_payment_id,
+              razorpay_signature: paymentRes.razorpay_signature,
+              plan: selectedPlan,
+            }),
+          });
+
+          const vData = await vRes.json();
+          if (vRes.ok && vData.entitled) {
+            isPremium = true;
+            updateEntitlementUI();
+            closeUpgradeModal();
+            alert('🎉 Payment verified! Scientific Calculator is now permanently unlocked.');
+          } else {
+            alert('Payment completed. Updating subscription status from server...');
+            fetchUserEntitlement(currentUser.id);
+          }
+        } catch (vErr) {
+          console.error('Payment verification network error:', vErr);
+          alert('Payment succeeded. Please refresh to confirm your upgraded status.');
+          fetchUserEntitlement(currentUser.id);
+        }
+      },
+      modal: {
+        ondismiss: function () {
+          if (checkoutBtn) {
+            checkoutBtn.disabled = false;
+            checkoutBtn.innerHTML = originalHtml;
+          }
+        },
+      },
+    };
+
+    if (typeof window.Razorpay === 'undefined') {
+      throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+    }
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   } catch (err) {
-    console.warn('Checkout error:', err);
-    alert(`Checkout Notice: ${err.message}\n\nTo activate live Stripe payments, deploy the create-checkout Edge Function and configure STRIPE_SECRET_KEY in Supabase.`);
+    console.warn('Razorpay checkout error:', err);
+    alert(`Checkout Notice: ${err.message}\n\nTo activate live Razorpay payments, deploy the create-razorpay-order and verify-razorpay-payment Edge Functions to Supabase and configure your RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.`);
   } finally {
     if (checkoutBtn) {
       checkoutBtn.disabled = false;
