@@ -255,6 +255,24 @@ async function handleAuthSubmit(e) {
   }
 }
 
+async function fetchUserEntitlement(userId) {
+  if (!supabaseClient || !userId) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('entitlements')
+      .select('plan, status, billing_cycle')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!error && data) {
+      isPremium = (data.plan === 'premium' && data.status === 'active');
+      updateEntitlementUI();
+    }
+  } catch (err) {
+    console.warn('Could not fetch entitlement:', err);
+  }
+}
+
 function onUserSignedIn(user) {
   currentUser = user;
   if (authHeaderBtn) {
@@ -264,6 +282,9 @@ function onUserSignedIn(user) {
     authHeaderBtn.onclick = null;
   }
   closeAuthModal();
+  if (user && user.id) {
+    fetchUserEntitlement(user.id);
+  }
 }
 
 function onUserSignedOut() {
