@@ -142,12 +142,59 @@ function selectPricingPlan(plan) {
   }
 }
 
-// Simulated checkout handler (ready to be replaced with Stripe API in Phase 7)
-function handleUpgradeCheckout() {
-  // Demonstration simulated activation for testing UI states
-  isPremium = !isPremium;
-  updateEntitlementUI();
-  closeUpgradeModal();
+// Checkout handler with Supabase Edge Functions & Stripe
+async function handleUpgradeCheckout() {
+  if (!currentUser) {
+    closeUpgradeModal();
+    openAuthModal();
+    const statusMsg = document.getElementById('auth-status-msg');
+    if (statusMsg) {
+      statusMsg.style.color = '#ff9500';
+      statusMsg.textContent = 'Please sign in or create an account before upgrading.';
+    }
+    return;
+  }
+
+  const checkoutBtn = document.getElementById('btn-stripe-checkout');
+  const originalHtml = checkoutBtn ? checkoutBtn.innerHTML : '';
+  if (checkoutBtn) {
+    checkoutBtn.disabled = true;
+    checkoutBtn.innerHTML = '<span>Creating secure checkout...</span>';
+  }
+
+  try {
+    const session = (await supabaseClient.auth.getSession()).data.session;
+    if (!session) throw new Error('Authentication session expired. Please sign in again.');
+
+    const checkoutEndpoint = `${SUPABASE_CONFIG.url}/functions/v1/create-checkout`;
+    const response = await fetch(checkoutEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        plan: selectedPlan,
+        returnUrl: window.location.origin + window.location.pathname,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.url) {
+      throw new Error(data.error || 'Checkout service unavailable.');
+    }
+
+    // Redirect to hosted Stripe checkout page
+    window.location.href = data.url;
+  } catch (err) {
+    console.warn('Checkout error:', err);
+    alert(`Checkout Notice: ${err.message}\n\nTo activate live Stripe payments, deploy the create-checkout Edge Function and configure STRIPE_SECRET_KEY in Supabase.`);
+  } finally {
+    if (checkoutBtn) {
+      checkoutBtn.disabled = false;
+      checkoutBtn.innerHTML = originalHtml;
+    }
+  }
 }
 
 function updateEntitlementUI() {
@@ -456,10 +503,65 @@ function deleteChar() {
   }
 }
 
-function calculate() {
+function isScientificExpression(expr) {
+  const sciTokens = [
+    'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
+    'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
+    'log10', 'log', 'sqrt', 'cbrt', 'exp', '10^', '1/',
+    'pi', 'e', 'abs', 'round', 'floor', 'ceil'
+  ];
+  return sciTokens.some(tok => expr.includes(tok)) || /[\^!]/.test(expr);
+}
+
+async function calculate() {
   const expr = display.value.trim();
   if (!expr) return;
 
+  const isSci = isScientificExpression(expr);
+
+  // Gating: If scientific expression and user is not entitled, trigger paywall
+  if (isSci && !isPremium) {
+    openUpgradeModal();
+    return;
+  }
+
+  // Server-side verification for entitled users
+  if (isSci && isPremium && supabaseClient && currentUser) {
+    try {
+      const session = (await supabaseClient.auth.getSession()).data.session;
+      if (session) {
+        const calcEndpoint = `${SUPABASE_CONFIG.url}/functions/v1/calculate`;
+        const res = await fetch(calcEndpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ expression: expr, angleMode: angle }),
+        });
+
+        if (res.status === 403) {
+          isPremium = false;
+          updateEntitlementUI();
+          openUpgradeModal();
+          return;
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          if (subDisplay) subDisplay.textContent = `${expr} =`;
+          lastAnswer = data.result;
+          display.value = data.result;
+          justCalculated = true;
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Server calculation endpoint unreachable, using local fallback:', e);
+    }
+  }
+
+  // Local evaluation (for free basic arithmetic)
   try {
     const result = evaluateExpression(expr, angle, lastAnswer);
     if (subDisplay) {
