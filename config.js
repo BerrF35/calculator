@@ -19,5 +19,5 @@ const SUPABASE_CONFIG = {
 };
 
 const RAZORPAY_CONFIG = {
-  keyId: 'YOUR_RAZORPAY_KEY_ID_HERE' // e.g. 'rzp_test_...'
+  keyId: 'rzp_test_TXejJaWcbFY5He'
 };

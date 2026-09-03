@@ -163,14 +163,18 @@ async function handleUpgradeCheckout() {
   }
 
   try {
-    const session = (await supabaseClient.auth.getSession()).data.session;
-    if (!session) throw new Error('Authentication session expired. Please sign in again.');
+    const session = supabaseClient ? (await supabaseClient.auth.getSession())?.data?.session : null;
+    const token = session?.access_token || 'local_dev_token';
 
-    const orderEndpoint = `${SUPABASE_CONFIG.url}/functions/v1/create-razorpay-order`;
+    const base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? ''
+      : SUPABASE_CONFIG.url;
+
+    const orderEndpoint = `${base}/functions/v1/create-razorpay-order`;
     const response = await fetch(orderEndpoint, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -202,11 +206,11 @@ async function handleUpgradeCheckout() {
 
         try {
           // Verify payment signature cryptographically on the server
-          const verifyEndpoint = `${SUPABASE_CONFIG.url}/functions/v1/verify-razorpay-payment`;
+          const verifyEndpoint = `${base}/functions/v1/verify-razorpay-payment`;
           const vRes = await fetch(verifyEndpoint, {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${session.access_token}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
