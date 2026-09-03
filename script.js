@@ -362,7 +362,12 @@ async function handleAuthSubmit(e) {
   } catch (err) {
     if (statusMsg) {
       statusMsg.style.color = '#ff5e57';
-      statusMsg.textContent = err.message || 'Authentication error.';
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('rate limit')) {
+        statusMsg.textContent = 'Email limit exceeded. In Supabase Dashboard -> Auth -> Providers -> Email, disable "Confirm email" to register instantly without rate limits.';
+      } else {
+        statusMsg.textContent = msg || 'Authentication error.';
+      }
     }
   } finally {
     if (submitBtn) submitBtn.disabled = false;
