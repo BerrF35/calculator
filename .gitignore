@@ -1,3 +1,4 @@
 supabase.exe
+supabase/.temp/
 *.log
 __pycache__/
